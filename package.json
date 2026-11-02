@@ -20,6 +20,10 @@
       "src/**/*",
       "package.json"
     ],
+    "electronLanguages": [
+      "en-US"
+    ],
+    "compression": "maximum",
     "win": {
       "target": [
         "nsis",

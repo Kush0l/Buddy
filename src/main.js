@@ -352,7 +352,9 @@ ipcMain.handle('settings:save', (_e, next) => {
 
 function applyAutoStart() {
   if (!app.isPackaged) return; // don't register the dev electron.exe as a login item
-  app.setLoginItemSettings({ openAtLogin: settings.autoStart });
+  // The portable .exe unpacks itself to a temp folder on every run; register the real file instead.
+  const portableExe = process.env.PORTABLE_EXECUTABLE_FILE;
+  app.setLoginItemSettings({ openAtLogin: settings.autoStart, ...(portableExe && { path: portableExe }) });
 }
 
 // ---------- tray ----------
