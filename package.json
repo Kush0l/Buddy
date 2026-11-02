@@ -13,6 +13,9 @@
   "build": {
     "appId": "io.buddy.reminder",
     "productName": "Buddy",
+    "directories": {
+      "buildResources": "build"
+    },
     "files": [
       "src/**/*",
       "package.json"
@@ -21,13 +24,15 @@
       "target": [
         "nsis",
         "portable"
-      ]
+      ],
+      "icon": "build/icon.ico"
     },
     "mac": {
       "category": "public.app-category.healthcare-fitness",
       "target": [
         "dmg"
-      ]
+      ],
+      "icon": "build/icon.png"
     },
     "nsis": {
       "oneClick": true,

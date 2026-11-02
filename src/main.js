@@ -318,6 +318,7 @@ function openSettings() {
     height: Math.min(880, screen.getPrimaryDisplay().workArea.height), // scrolls on short screens
     resizable: false,
     title: 'Buddy settings',
+    icon: path.join(__dirname, 'assets', 'icon.png'),
     autoHideMenuBar: true,
     webPreferences: { preload: path.join(__dirname, 'preload.js') },
   });
