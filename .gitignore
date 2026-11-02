@@ -1,0 +1,16 @@
+# dependencies (reinstall with `npm install`)
+node_modules/
+
+# built installers (rebuild with `npm run dist:win` / `npm run dist:mac`)
+dist/
+
+# logs and OS clutter
+npm-debug.log*
+*.log
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# editor settings
+.vscode/
+.idea/

@@ -1,0 +1,308 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'">
+<title>Ghosty</title>
+<style>
+  html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; user-select: none; }
+  body { font-family: "Segoe UI", -apple-system, system-ui, sans-serif; }
+
+  /* ---- flyer: Ghosty + bubble, moved across the strip by the script below ---- */
+  #flyer { position: absolute; left: 0; top: 0; width: 280px; height: 330px; will-change: transform; }
+  #tilt { width: 100%; height: 100%; transition: transform .6s ease-in-out; }
+
+  #ghostWrap {
+    position: absolute; left: 65px; bottom: 8px; width: 150px; height: 172px;
+    transform-origin: 50% 70%; transition: transform .35s cubic-bezier(.3,1.6,.5,1), opacity .8s;
+    animation: appear 1s ease-out;
+  }
+  #ghostWrap.happy { animation: happy 1s ease-in forwards; }
+  #ghostWrap.vanish { animation: vanish .8s ease-in forwards; }
+  @keyframes appear { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes happy { 40% { transform: translateY(-30px) rotate(360deg); opacity: 1; } 100% { transform: translateY(-260px) rotate(360deg); opacity: 0; } }
+  @keyframes vanish { to { opacity: 0; transform: scale(.5); } }
+
+  #ghost { width: 150px; height: 172px; cursor: pointer; overflow: visible;
+           filter: drop-shadow(0 0 14px rgba(170,150,255,.55)); transition: filter .4s; }
+  #ghost.squish { animation: squish .45s ease-out; }
+  @keyframes squish { 30% { transform: scale(1.12,.88); } 60% { transform: scale(.94,1.06); } }
+
+  #body { transform-origin: 100px 120px; animation: sway 2.4s ease-in-out infinite; }
+  @keyframes sway { 0%,100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
+  #armL { transform-origin: 46px 128px; animation: waveL .9s ease-in-out infinite alternate; }
+  #armR { transform-origin: 154px 128px; animation: waveR .9s ease-in-out infinite alternate; }
+  @keyframes waveL { from { transform: rotate(-20deg); } to { transform: rotate(15deg); } }
+  @keyframes waveR { from { transform: rotate(20deg); } to { transform: rotate(-15deg); } }
+
+  .skin { fill: #f8f6ff; transition: fill .4s; }
+  .ceye { transform-box: fill-box; transform-origin: center; animation: blink 3.6s infinite; }
+  @keyframes blink { 0%,92%,100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
+  #cute, #shine { transition: opacity .25s; }
+  #angry { opacity: 0; transition: opacity .25s; }
+
+  /* ---- weak: the bar this reminder is about is low, so Ghosty is fading ---- */
+  body.weak #ghostWrap { opacity: .45; }
+  #thought { left: 214px; top: 162px; z-index: 2; } /* beside Ghosty's head, below the bubble */
+
+  /* ---- eating: the mouth opens and chomps as sips/bites fly in ---- */
+  #munch { opacity: 0; transform-box: fill-box; transform-origin: center; }
+  #gsmile, #sadBits { transition: opacity .25s; }
+  body.eating #gsmile { opacity: 0; }
+  body.eating #munch { opacity: 1; animation: munch .22s ease-in-out infinite alternate; }
+  body.eating #ghost { animation: squish .45s ease-out .3s 4; }
+  @keyframes munch { from { transform: scaleY(1); } to { transform: scaleY(.25); } }
+
+  /* ---- sad: shown when you tap "Later" ---- */
+  #sadBits { opacity: 0; }
+  body.sad #sadBits { opacity: 1; }
+  body.sad #gsmile { opacity: 0; }
+  body.sad .skin { fill: #e4e9f7; }
+  body.sad #ghost { filter: drop-shadow(0 0 14px rgba(140,160,210,.5)); }
+  body.sad #body { animation-duration: 4.5s; }
+  body.sad #armL { animation: armDroopL .6s ease-out forwards; }
+  body.sad #armR { animation: armDroopR .6s ease-out forwards; }
+  body.sad #gtear { animation: tear 1.3s ease-in .4s infinite; }
+  #ghostWrap.sinkAway { animation: sinkAway 1.5s ease-in forwards; }
+  @keyframes armDroopL { to { transform: rotate(-35deg); } }
+  @keyframes armDroopR { to { transform: rotate(35deg); } }
+  @keyframes tear { 0% { opacity: 0; transform: translateY(0); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(22px); } }
+  @keyframes sinkAway { to { opacity: 0; transform: translateY(140px) scale(.9); } }
+
+  /* ---- angry: shown when you tap 🔕 to block reminders ---- */
+  body.angry #thought { visibility: hidden; }
+  body.angry .petbar { background: rgba(255,255,255,.15); }
+  body.angry .skin { fill: #36234f; }
+  body.angry #cute, body.angry #shine { opacity: 0; }
+  body.angry #angry { opacity: 1; }
+  body.angry #ghostWrap { transform: scale(1.3); }
+  body.angry #ghost { filter: drop-shadow(0 0 20px rgba(255,40,90,.75)); animation: shake .09s linear infinite; }
+  body.angry #redEyes { animation: flicker .5s steps(2) infinite; }
+  @keyframes shake { 0%,100% { transform: translate(0,0); } 25% { transform: translate(-3px,1px); } 50% { transform: translate(2px,-2px); } 75% { transform: translate(3px,2px); } }
+  @keyframes flicker { 50% { opacity: .7; } }
+
+  /* ---- speech bubble ---- */
+  #bubble {
+    position: absolute; left: 33px; bottom: 186px; width: 214px; box-sizing: border-box; z-index: 1;
+    background: #fff; color: #2b2140; border-radius: 18px; padding: 11px 12px 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.22), 0 0 0 1px rgba(0,0,0,.06);
+    transform-origin: 50% 110%; transform: scale(0); opacity: 0;
+    transition: background .4s, color .4s;
+  }
+  #bubble.show { animation: pop .45s cubic-bezier(.3,1.6,.5,1) forwards; }
+  #bubble.leaving { animation: unpop .25s ease-in forwards; transform: scale(1); opacity: 1; }
+  #bubble::after { content: ""; position: absolute; left: calc(50% - 11px); bottom: -11px; width: 22px; height: 22px;
+                   background: inherit; transform: rotate(45deg); border-radius: 0 0 5px 0; }
+  @keyframes pop { to { transform: scale(1); opacity: 1; } }
+  @keyframes unpop { to { transform: scale(0); opacity: 0; } }
+  body.angry #bubble { background: #2a1d3f; color: #f3eaff; }
+  body.angry #title { color: #ff4d6d; }
+
+  #done { background: #8b6cf0; }
+  #snooze, #busy { background: #eeeaf8; color: #5c5270; }
+</style>
+<link rel="stylesheet" href="common.css">
+</head>
+<body>
+  <div id="flyer">
+    <div id="bubble" class="hit">
+      <div class="head"><span id="icon"></span><h1 id="title"></h1></div>
+      <div class="row">
+        <button id="done"></button>
+        <button id="snooze"></button>
+        <button id="busy"></button>
+      </div>
+      <div id="meters" class="petbar"></div>
+    </div>
+
+    <div id="thought" class="thought"></div>
+
+    <div id="ghostWrap">
+      <div id="tilt">
+        <svg id="ghost" class="hit" viewBox="0 0 200 230">
+          <g id="body">
+            <g id="armL"><ellipse class="skin" cx="38" cy="128" rx="15" ry="10"/></g>
+            <g id="armR"><ellipse class="skin" cx="162" cy="128" rx="15" ry="10"/></g>
+            <path class="skin" d="M40 112 C40 52 68 22 100 22 C132 22 160 52 160 112 L160 196 Q150 212 140 196 Q130 180 120 196 Q110 212 100 196 Q90 180 80 196 Q70 212 60 196 Q50 180 40 196 Z"/>
+            <ellipse id="shine" cx="76" cy="54" rx="16" ry="9" fill="#fff" opacity=".8" transform="rotate(-28 76 54)"/>
+
+            <g id="cute">
+              <g class="ceye"><ellipse cx="80" cy="98" rx="10" ry="13" fill="#2b2140"/><circle cx="83.5" cy="92.5" r="3.6" fill="#fff"/></g>
+              <g class="ceye"><ellipse cx="120" cy="98" rx="10" ry="13" fill="#2b2140"/><circle cx="123.5" cy="92.5" r="3.6" fill="#fff"/></g>
+              <ellipse cx="64" cy="119" rx="8.5" ry="5" fill="#ffb3c7" opacity=".75"/>
+              <ellipse cx="136" cy="119" rx="8.5" ry="5" fill="#ffb3c7" opacity=".75"/>
+              <path id="gsmile" d="M93 118 Q100 127 107 118" stroke="#2b2140" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+              <ellipse id="munch" cx="100" cy="121" rx="7" ry="7.5" fill="#2b2140"/>
+            </g>
+
+            <g id="sadBits" stroke-linecap="round">
+              <path d="M66 82 Q74 79 89 75" stroke="#2b2140" stroke-width="3" fill="none"/>
+              <path d="M111 75 Q126 79 134 82" stroke="#2b2140" stroke-width="3" fill="none"/>
+              <path d="M91 127 Q100 119 109 127" stroke="#2b2140" stroke-width="3.2" fill="none"/>
+              <path id="gtear" d="M72 110 Q76 117 76 120 A4 4 0 0 1 68 120 Q68 117 72 110 Z" fill="#7cc4ff"/>
+            </g>
+
+            <g id="angry">
+              <g id="redEyes">
+                <path d="M60 84 L95 99 L88 109 Q70 109 62 96 Z" fill="#ff2d55"/>
+                <path d="M140 84 L105 99 L112 109 Q130 109 138 96 Z" fill="#ff2d55"/>
+                <circle cx="84" cy="101" r="3.2" fill="#ffe066"/>
+                <circle cx="116" cy="101" r="3.2" fill="#ffe066"/>
+              </g>
+              <path d="M62 124 Q100 176 138 124 Q100 142 62 124 Z" fill="#12091f"/>
+              <path d="M72 128 L79 145 L86 132 Z M114 132 L121 145 L128 128 Z" fill="#fff"/>
+              <path d="M90 154 L95 146 L100 155 L105 146 L110 154 Z" fill="#fff" opacity=".9"/>
+            </g>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+<script src="common.js"></script>
+<script>
+  fillBubble('Ghosty');
+
+  // ---- flight: Ghosty drifts from one end of the screen to the other and back until you answer ----
+  const FLYER_W = 280;
+  const Y0 = 124; // resting height inside the 500px strip; a gentle bob goes ±18px around it
+  const CRUISE = 140; // px per second
+  const flyer = $('flyer');
+  const tilt = $('tilt');
+  let x = -FLYER_W; // starts just off the left edge
+  let dir = 1;
+  let mode = 'fly'; // 'fly' | 'stop' | 'dash'
+  let arrived = false;
+  let last = performance.now();
+
+  // Track the pointer ourselves: Ghosty moves, so it can slide out from under a still mouse
+  // without a mouseleave, which would leave the window catching clicks meant for your apps.
+  let pointer = null;
+  let catching = false;
+  addEventListener('mousemove', (e) => { pointer = [e.clientX, e.clientY]; });
+  document.addEventListener('mouseleave', () => { pointer = null; });
+
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+
+    const over = mode !== 'dash' && pointer && document.elementFromPoint(...pointer)?.closest('.hit');
+    if (!!over !== catching) {
+      catching = !!over;
+      api.setIgnoreMouse(!catching);
+    }
+
+    const maxX = innerWidth - FLYER_W;
+    if (mode === 'fly' && !over) {
+      x += dir * (x < 0 ? 2.2 * CRUISE : CRUISE) * dt; // zips in quickly, then cruises
+      if (x > maxX) { x = maxX; dir = -1; }
+      if (x < 0 && dir < 0) { x = 0; dir = 1; }
+    } else if (mode === 'dash') {
+      x += dir * 1500 * dt;
+    }
+    if (!arrived && x >= 0) {
+      arrived = true;
+      $('bubble').classList.add('show');
+      showThought();
+      whoo();
+    }
+
+    const y = Y0 + Math.sin(now / 650) * 18;
+    flyer.style.transform = `translate(${x}px, ${y}px)`;
+    tilt.style.transform = `rotate(${mode === 'fly' && !over ? dir * 7 : 0}deg)`;
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  // ---- answers ----
+  let gone = false;
+  function exit(action, ghostClass, ms) {
+    mode = 'stop';
+    api.setIgnoreMouse(true);
+    $('bubble').classList.add('leaving');
+    $('ghostWrap').classList.add(ghostClass);
+    $('thought').classList.add('hide');
+    setTimeout(() => api.respond(action), ms);
+  }
+
+  function finish(action, ghostClass, ms) {
+    if (gone) return;
+    gone = true;
+    exit(action, ghostClass, ms);
+  }
+
+  // "Drank it" / "Ate it": Ghosty stops and chomps down sips/bites that fly into its mouth while
+  // its bar fills, then spins away happy.
+  function eatWithYou() {
+    if (gone) return;
+    gone = true;
+    mode = 'stop';
+    document.body.classList.add('eating');
+    react(needIcon, kind === 'water' ? 'Gulp! ❤️' : 'Nom! ❤️');
+    feedPet();
+    yay();
+    const bite = kind === 'water' ? '💧' : pick(['🍪', '🍙', '🍎']);
+    const words = kind === 'water' ? ['gulp!', 'gulp!', 'ahh~'] : ['nom!', 'nom nom!', 'yum!'];
+    const mouth = [140, 240]; // Ghosty's mouth inside the flyer
+    words.forEach((word, i) => {
+      flyInto(flyer, bite, [262, 262 - i * 14], mouth, 250 + i * 600);
+      setTimeout(() => popText(flyer, word, 22 + i * 6, 206 - i * 10), 800 + i * 600);
+    });
+    setTimeout(() => exit('done', 'happy', 1000), 2700);
+  }
+
+  // "Later": Ghosty gets sad, says it won't drink/eat without you either, then sinks slowly away.
+  function sadLeave() {
+    if (gone) return;
+    gone = true;
+    mode = 'stop';
+    document.body.classList.add('sad');
+    react('🥺', `No ${needIcon} for me then…`);
+    petSkips();
+    sigh();
+    setTimeout(() => exit('snooze', 'sinkAway', 1500), 2800);
+  }
+
+  // 🔕: blocking reminders makes Ghosty angry: it BOOs at you, then dashes off the nearest edge.
+  function angryLeave() {
+    if (gone) return;
+    gone = true;
+    mode = 'stop';
+    document.body.classList.add('angry');
+    react('😈', 'Blocking ME?!');
+    petSkips();
+    spooky();
+    setTimeout(() => {
+      $('bubble').classList.add('leaving');
+      dir = x + FLYER_W / 2 < innerWidth / 2 ? -1 : 1;
+      mode = 'dash';
+      api.setIgnoreMouse(true);
+      setTimeout(() => api.respond('busy'), 900);
+    }, 3000);
+  }
+
+  $('done').onclick = eatWithYou;
+  $('snooze').onclick = sadLeave;
+  $('busy').onclick = angryLeave;
+  api.onLeave((action) => finish(action, 'vanish', 850));
+  setTimeout(() => finish('snooze', 'vanish', 850), timeoutSec * 1000);
+
+  const ghost = $('ghost');
+  ghost.addEventListener('click', () => {
+    if (gone) return;
+    ghost.classList.remove('squish');
+    void ghost.getBBox();
+    ghost.classList.add('squish');
+    whoo();
+  });
+
+  const whoo = () => playTones([{ freq: 520, dur: 0.55, to: 1.5, vibrato: 10, volume: 0.14 }]); // cute "whoo~"
+  const yay = () => playTones([{ freq: 660, dur: 0.12, to: 1.2 }, { freq: 880, at: 0.12, dur: 0.18, to: 1.2 }]);
+  const sigh = () => playTones([{ freq: 700, dur: 0.8, to: 0.5, vibrato: 12, volume: 0.14 }]); // sad "oooh…"
+  const spooky = () => playTones([
+    { freq: 150, dur: 0.3, to: 0.7, type: 'square', volume: 0.1 }, // "BOO"
+    { freq: 330, at: 0.2, dur: 1.5, to: 0.55, type: 'triangle', vibrato: 22, volume: 0.2 }, // "wooOOooo"
+  ]);
+</script>
+</body>
+</html>

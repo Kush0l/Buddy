@@ -1,0 +1,44 @@
+{
+  "name": "buddy-reminder",
+  "productName": "Buddy",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A pet (dog, cat or ghost) that comes onto your screen to remind you to drink water and eat.",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist:win": "electron-builder --win portable nsis",
+    "dist:mac": "electron-builder --mac dmg"
+  },
+  "build": {
+    "appId": "io.buddy.reminder",
+    "productName": "Buddy",
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "mac": {
+      "category": "public.app-category.healthcare-fitness",
+      "target": [
+        "dmg"
+      ]
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false
+    }
+  },
+  "devDependencies": {
+    "electron": "^45.2.1",
+    "electron-builder": "^26.18.0"
+  },
+  "allowScripts": {
+    "electron@45.2.1": true
+  }
+}

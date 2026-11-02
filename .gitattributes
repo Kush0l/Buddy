@@ -1,0 +1,9 @@
+# Keep line endings consistent between Windows and macOS checkouts.
+* text=auto eol=lf
+
+# Images are binary.
+*.webp binary
+*.png binary
+*.jpg binary
+*.ico binary
+*.icns binary

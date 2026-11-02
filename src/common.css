@@ -1,0 +1,57 @@
+/* Shared styles for the reminder overlays (dog.html, ghost.html): the compact bubble,
+   the pet's bar, eating effects and the thought cloud over the pet. */
+
+/* ---- compact bubble: icon + 2–3 word label, icon buttons, the pet's bar ---- */
+#bubble .head { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; }
+#icon { font-size: 26px; line-height: 1; }
+#title { margin: 0; font-size: 16px; font-weight: 700; white-space: nowrap; }
+.row { display: flex; gap: 6px; }
+.row button {
+  font: inherit; font-weight: 700; border: 0; border-radius: 10px; padding: 6px 10px; white-space: nowrap;
+  cursor: pointer; transition: transform .1s, filter .15s;
+}
+.row button:hover { filter: brightness(.95); }
+.row button:active { transform: scale(.94); }
+#done { flex: 1; font-size: 18px; line-height: 20px; color: #fff; }
+#snooze { font-size: 13px; }
+#busy { font-size: 14px; }
+
+/* ---- the pet's bar: a thin strip along the bottom of the bubble ---- */
+.petbar { position: relative; z-index: 1; /* above the bubble's pointer */ height: 6px; margin-top: 10px; border-radius: 3px; background: rgba(127,127,127,.2); }
+.petbar .fill { height: 100%; border-radius: 3px; transition: width 1.1s cubic-bezier(.3,1.3,.5,1), background .4s; }
+.petbar-water .fill { background: #3d9bff; }
+.petbar-food .fill { background: #f28c28; }
+.petbar.low .fill { background: #e5484d; animation: lowPulse 1s ease-in-out infinite; }
+.petbar.skipped .fill { background: #a3a9b8; }
+@keyframes lowPulse { 50% { opacity: .45; } }
+
+.gain { position: absolute; right: 0; top: -19px; font-size: 11px; line-height: 15px; padding: 0 6px;
+        border-radius: 8px; background: #26a69a; color: #fff; font-style: normal; opacity: 0; }
+.petbar.fed .gain { animation: gainUp 1.6s ease-out forwards; }
+@keyframes gainUp { 0% { opacity: 0; transform: translateY(6px); } 20%, 70% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-8px); } }
+
+/* ---- eating effects: popping words and flying bites ---- */
+.pop-text { position: absolute; z-index: 3; pointer-events: none; white-space: nowrap;
+            font: 800 15px "Segoe UI", system-ui, sans-serif; color: #26a69a;
+            text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff; }
+.bite { position: absolute; left: -12px; top: -12px; z-index: 3; pointer-events: none; font-size: 24px; line-height: 24px; }
+
+/* ---- thought cloud over the pet ---- */
+.thought { position: absolute; width: 54px; height: 46px; border-radius: 23px; background: #fff;
+           box-shadow: 0 4px 14px rgba(0,0,0,.2); display: grid; place-items: center; font-size: 24px;
+           opacity: 0; transform: scale(0); transform-origin: 15% 100%; pointer-events: none; }
+.thought::before, .thought::after { content: ""; position: absolute; background: #fff; border-radius: 50%;
+                                    box-shadow: 0 2px 6px rgba(0,0,0,.14); }
+.thought::before { width: 13px; height: 13px; left: 3px; bottom: -9px; }
+.thought::after { width: 7px; height: 7px; left: -5px; bottom: -18px; }
+.thought.show { animation: thoughtIn .45s cubic-bezier(.3,1.6,.5,1) forwards, thoughtBob 2s ease-in-out .45s infinite; }
+.thought.fed span { animation: heartPop .5s cubic-bezier(.3,1.8,.5,1); }
+.thought.hide { visibility: hidden; }
+@keyframes thoughtIn { to { opacity: 1; transform: scale(1); } }
+@keyframes thoughtBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@keyframes heartPop { from { transform: scale(.2); } to { transform: scale(1); } }
+
+.bang { position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; border-radius: 50%;
+        background: #e5484d; color: #fff; font: 700 12px/18px "Segoe UI", system-ui, sans-serif; font-style: normal;
+        text-align: center; animation: bangPulse 1s ease-in-out infinite; }
+@keyframes bangPulse { 50% { transform: scale(1.2); } }
